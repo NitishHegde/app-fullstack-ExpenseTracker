@@ -2,8 +2,8 @@ import React, { Activity, useEffect, useMemo, useState } from 'react'
 import { styles } from '../assets/dummyStyles'
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
-// import axios from 'axios';
-import { ActivityIcon, ArrowDown, ArrowUp, Car, ChevronDown, ChevronUp, Clock, CreditCard, DollarSign, Gift, Home, Info, PiggyBank, RefreshCw, ShoppingCart, TrendingUp, Utensils, Zap } from 'lucide-react';
+import axios from 'axios';
+import { ActivityIcon, ArrowDown, ArrowUp, Car, ChevronDown, ChevronUp, Clock, CreditCard, DollarSign, Gift, Home, Info, PieChart, PiggyBank, RefreshCw, ShoppingCart, TrendingUp, Utensils, Zap } from 'lucide-react';
 import { Outlet } from 'react-router-dom';
 
 
@@ -49,12 +49,13 @@ const safeArrayFromResponse = (res) => {
   if (!body) return [];
   if (Array.isArray(body)) return body;
   if (Array.isArray(body.data)) return body.data;
-  if (Array.isArray(body.incomes)) return body.incomes;
-  if (Array.isArray(body.expenses)) return body.expenses;
+  if (Array.isArray(body.income)) return body.income;
+  if (Array.isArray(body.expense)) return body.expense;
   return [];
 };
 
-const Layout = ({onLogout, user}) => {
+// const Layout = ({onLogout, user}) => {
+const Layout = ({onLogout, user, token}) => {
     const [transactions, setTransactions] = useState([]);
     const [timeFrame, setTimeFrame] = useState("monthly");
     const [loading, setLoading] = useState(false);
@@ -62,17 +63,27 @@ const Layout = ({onLogout, user}) => {
     const [lastUpdated, setLastUpdated] = useState(new Date());
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+    const getToken = () => 
+        token || 
+        localStorage.getItem("token") || 
+        sessionStorage.getItem("token");
+
     // to fech transactions from server side
     const fetchTransactions = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+    //   const token = localStorage.getItem("token");
+      const token = getToken(); 
+      console.log("Token:", token);                    // 👈 is token present?
+      console.log("API_BASE:", API_BASE);  
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
       const [incomeRes, expenseRes] = await Promise.all([
         axios.get(`${API_BASE}/income/get`, { headers }),
         axios.get(`${API_BASE}/expense/get`, { headers }),
       ]);
+        console.log("incomeRes.data:", incomeRes.data);
+        console.log("expenseRes.data:", expenseRes.data);
 
       const incomes = safeArrayFromResponse(incomeRes).map((i) => ({
         ...i,
@@ -82,6 +93,8 @@ const Layout = ({onLogout, user}) => {
         ...e,
         type: "expense",
       }));
+      console.log("incomes:", incomes);
+    console.log("expenses:", expenses);
 
       const allTransactions = [...incomes, ...expenses]
         .map((t) => ({
@@ -109,7 +122,8 @@ const Layout = ({onLogout, user}) => {
 
   const addTransaction = async (transaction) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken(); 
+    //   const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const endpoint =
         transaction.type === "income" ? "income/add" : "expense/add";
@@ -127,7 +141,8 @@ const Layout = ({onLogout, user}) => {
 
   const editTransaction = async (id, transaction) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
+    //   const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const endpoint =
         transaction.type === "income" ? "income/update" : "expense/update";
@@ -147,7 +162,8 @@ const Layout = ({onLogout, user}) => {
 
   const deleteTransaction = async (id, type) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken(); 
+    //   const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const endpoint = type === "income" ? "income/delete" : "expense/delete";
       await axios.delete(`${API_BASE}/${endpoint}/${id}`, { headers });
@@ -162,9 +178,13 @@ const Layout = ({onLogout, user}) => {
     }
   };
 
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
+//   useEffect(() => {
+//     fetchTransactions();
+//   }, []);
+    useEffect(() => {
+        const token = getToken(); 
+        if(token) fetchTransactions();
+    }, [token]);
 
   const filteredTransactions = useMemo(
     () => filterTransactions(transactions, timeFrame),
@@ -429,7 +449,7 @@ const Layout = ({onLogout, user}) => {
                                     return(
                                         <div key={id} className={styles.transactions.transactionItem}>
                                             <div className="flex items-center gap-1 md:gap-4 lg:gap-3">
-                                                <div className={`p-2 rounded-lg ${styles.transactions.bg(
+                                                <div className={`p-2 rounded-lg ${styles.transactions.iconWrapper(
                                                     type
                                                 )}`}>
                                                     {CATEGORY_ICONS[category] ||(
@@ -480,15 +500,62 @@ const Layout = ({onLogout, user}) => {
                                                 <>
                                                 <ChevronDown className='w-5 h-5'/>
                                                 View All Transactions({transactions.length})
-                                                )
                                                 </>
                                             )}
-
                                         </button>
-
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                        {/* spending by category */}
+                        <div className={styles.cards.base}>
+                            <h3 className={styles.categories.title}>
+                                <PieChart className={styles.categories.titleIcon}/>
+                                Spending by category
 
+                            </h3>
+                            <div className={styles.categories.list}>
+                                {topCategories.map(([category, amount])=>(
+                                    <div key={category} className={styles.categories.categoryItem}>
+                                        <div className = "flex items-center gap-3">
+                                            <div className={styles.categories.categoryIconContainer}>
+                                                {CATEGORY_ICONS[category] || (
+                                                    <DollarSign className={styles.categories.categoryIcon}/>
+                                                )}
+                                            </div>
+                                            <span className={styles.categories.categoryName}>
+                                                {category}
+
+                                            </span>
+                                        </div>
+                                        <span className={styles.categories.categoryAmount}>
+                                            ${amount}
+                                        </span>
+                                     </div>   
+                                ))}
+                            </div>
+                            <div className={styles.categories.summaryContainer}>
+                                <div className={styles.categories.summaryGrid}>
+
+                                    <div className={styles.categories.summaryIncomeCard}>
+                                        <p className={styles.categories.summaryTitle}>
+                                            Total Income
+                                        </p>
+                                        <p className={styles.categories.summaryValue}>
+                                            ${stats.allTimeIncome.toLocaleString()}
+                                        </p>
+                                    </div>
+
+                                    <div className={styles.categories.summaryExpenseCard}>
+                                        <p className={styles.categories.summaryTitle}>
+                                            Total Expense
+                                        </p>
+                                        <p className={styles.categories.summaryValue}>
+                                            ${stats.allTimeExpenses.toLocaleString()}
+                                        </p>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
                     </div>

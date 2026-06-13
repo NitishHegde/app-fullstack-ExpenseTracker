@@ -16,10 +16,8 @@ const Navbar = ({user: propUser, onLogout}) => {
     const navigate = useNavigate();
     const menuRef = useRef();
     const [menuOpen, setMenuOpen] = useState(false);
-    const user = propUser || {
-        name: "",
-        email: "",
-    };
+    const [user, setUser] = useState(propUser || { name: "", email: "" });
+
 
     // to fetch user profile from server
     useEffect(() => {
