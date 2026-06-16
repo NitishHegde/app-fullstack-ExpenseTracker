@@ -1,0 +1,18 @@
+import React from 'react'
+
+const financialcars = () => (
+    {icon, label, value, additionalContent, borderColor="",
+        bgColor="bg-white"
+    }) => (
+        <div className={`${bgColor} rounded-xl p-5 lg:-mx-2 lg:p-2 shadow-sm border 
+        hover:shadow-md border-gray-100 transition-all ${borderColor}}` }>
+            <div className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                {icon}
+                {label}
+            </div>
+            <p className="text=2x1 font-bold text-gray-900 mt-1">{value}</p>
+            {additionalContent}
+        </div>
+    )
+
+export default financialcars
