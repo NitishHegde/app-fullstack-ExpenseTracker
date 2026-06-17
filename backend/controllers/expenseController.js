@@ -155,7 +155,7 @@ export async function getExpenseOverview(req, res) {
         const { range = "monthly" } = req.query;
         const { start, end } = getDateRange(range);
 
-        const expenses = await incomeModel.find({
+        const expenses = await expenseModel.find({
             userId,
             date: {
                 $gte: start,
@@ -164,7 +164,7 @@ export async function getExpenseOverview(req, res) {
         }).sort({ date: -1 });
 
         const totalExpense = expenses.reduce((acc, cur) => acc + cur.amount, 0);
-        const averageExpense = expenses.length > 0 ? totalExpense / expense.length : 0;
+        const averageExpense = expenses.length > 0 ? totalExpense / expenses.length : 0;
         const recentTransactions = expenses.slice(0, 5);
         const numberOfTransactions = expenses.length;
 

@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboardpage from './pages/Dashboardpage';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import axios from 'axios';
+import Income from './pages/Income';
+import Expense from './pages/Expense';
+import Profile from './pages/Profile';
 
 const API_URL = import.meta.env.VITE_BASE_URL;
 // to get transaction coming from local storage
@@ -229,7 +232,30 @@ const App = () => {
             deleteTransaction={deleteTransaction}
             refreshTransactions={refreshTransactions}
           />
+
+          <Route path='/income' element={
+            <Income transactions={transactions}
+            addTransaction={addTransaction}
+            editTransaction={editTransaction}
+            deleteTransaction={deleteTransaction}
+            refreshTransactions={refreshTransactions}/>
+          } />
+
+          <Route path='/expense' element={
+            <Expense transactions={transactions}
+            addTransaction={addTransaction}
+            editTransaction={editTransaction}
+            deleteTransaction={deleteTransaction}
+            refreshTransactions={refreshTransactions}/>
+          } />
+
+          <Route path="/profile" element={<Profile user={user} onUpdateProfile={updateuserData}
+            onLogout={handleLogout}
+            />
+          } 
+        />
         </Route>
+        <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
       </Routes>
     </>
   )
